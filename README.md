@@ -69,6 +69,7 @@ O objetivo deste épico é desenvolver um ecossistema que permita a geração de
 
 ### **Cenário 2: Geração de Relatório Completo**
 **Dado** que um cliente solicita um relatório completo
+
 **Quando** a API recebe o pedido e valida os dados
 **Então** o sistema armazena o valor R$ 10,00 no banco de dados
 **E** chama os Apps 2 e 3 de forma assíncrona
