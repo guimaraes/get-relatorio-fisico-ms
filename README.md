@@ -1,12 +1,12 @@
 # Geração de Relatórios para Pessoa Física
 
 ## Visão Geral
-O objetivo deste épico é desenvolver um ecossistema que permita a geração de relatórios para pessoa física a partir de um endpoint. O sistema irá classificar o tipo de relatório (Básico ou Completo), calcular o valor a ser cobrado e consolidar os dados para entrega ao usuário final. Também será implementado um mecanismo de rollback e fallback caso haja falhas na geração do relatório completo.
+O objetivo deste projeto é desenvolver um ecossistema que permita a geração de relatórios para pessoa física a partir de um endpoint. O sistema irá classificar o tipo de relatório (**Básico ou Completo**), calcular o valor a ser cobrado e consolidar os dados para entrega ao usuário final. Também será implementado um mecanismo de rollback e fallback caso haja falhas na geração do relatório completo.
 
 ## Requisitos do Negócio
 - O cliente pode solicitar um **Relatório Básico** (R$ 5,00) ou um **Relatório Completo** (R$ 10,00);
-- O Relatório Básico retorna: Nome, Sexo e Nacionalidade;
-- O Relatório Completo retorna tudo do Básico + Endereço, Telefone e Documentos (RG e CPF);
+- O Relatório Básico retorna: **Nome, Sexo e Nacionalidade**;
+- O Relatório Completo retorna tudo do Básico + **Endereço, Telefone e Documentos (RG e CPF)**;
 - Se a soma dos dígitos do CPF for igual a **44**, a geração do relatório será negada.
 
 ## Requisitos Técnicos
@@ -62,30 +62,29 @@ O objetivo deste épico é desenvolver um ecossistema que permita a geração de
 # BDD - Comportamento do Sistema
 
 ### **Cenário 1: Geração de Relatório Básico**
-**Dado** que um cliente solicita um relatório básico
-**Quando** a API recebe o pedido e valida os dados
-**Então** o sistema armazena o valor R$ 5,00 no banco de dados
+**Dado** que um cliente solicita um relatório básico  
+**Quando** a API recebe o pedido e valida os dados  
+**Então** o sistema armazena o valor R$ 5,00 no banco de dados  
 **E** retorna Nome, Sexo e Nacionalidade ao cliente.
 
 ### **Cenário 2: Geração de Relatório Completo**
-**Dado** que um cliente solicita um relatório completo
-
-**Quando** a API recebe o pedido e valida os dados
-**Então** o sistema armazena o valor R$ 10,00 no banco de dados
-**E** chama os Apps 2 e 3 de forma assíncrona
+**Dado** que um cliente solicita um relatório completo  
+**Quando** a API recebe o pedido e valida os dados  
+**Então** o sistema armazena o valor R$ 10,00 no banco de dados  
+**E** chama os Apps 2 e 3 de forma assíncrona  
 **E** consolida os resultados antes de retornar ao cliente.
 
 ### **Cenário 3: Rollback em Falha**
-**Dado** que um cliente solicita um relatório completo
-**E** o App 3 falha na resposta
-**Quando** o sistema tenta duas novas requisições com 300ms de intervalo
-**E** ambas falham
+**Dado** que um cliente solicita um relatório completo  
+**E** o App 3 falha na resposta  
+**Quando** o sistema tenta duas novas requisições com 300ms de intervalo  
+**E** ambas falham  
 **Então** o sistema reverte a cobrança e processa apenas o básico.
 
 ### **Cenário 4: CPF Restrito**
-**Dado** que um cliente solicita um relatório
-**Quando** a soma dos dígitos do CPF for 44
-**Então** o sistema bloqueia a emissão do relatório
+**Dado** que um cliente solicita um relatório  
+**Quando** a soma dos dígitos do CPF for 44  
+**Então** o sistema bloqueia a emissão do relatório  
 **E** informa o cliente sobre a restrição.
 
 ---
@@ -96,11 +95,5 @@ O objetivo deste épico é desenvolver um ecossistema que permita a geração de
 - Os endpoints devem seguir padrões RESTful e retornar status HTTP adequados;
 - As falhas devem ser tratadas corretamente (rollback, fallback e exceções);
 - A documentação deve estar atualizada no **Swagger**;
-- Todas as regras de negócio e requisitos técnicos devem estar cobertos pelos cenários BDD;
 - Nenhuma história pode ser marcada como "Concluída" sem revisão de código.
-
----
-
-## Conclusão
-Este documento define todas as atividades necessárias para a implementação do ecossistema de relatórios dentro da metodologia Scrum. Se precisar de ajustes, estou à disposição!
 
