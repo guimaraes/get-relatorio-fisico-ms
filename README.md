@@ -279,8 +279,6 @@ Aqui estão todas as **tarefas** organizadas em **sprints**, priorizando as mais
 📌 **Objetivo da Sprint 1:**  
 Esta sprint tem como foco **configurar a base do projeto**, garantindo que todas as aplicações estejam **estruturadas corretamente**, com suas dependências configuradas e **prontas para desenvolvimento**. Além disso, as **principais integrações entre os serviços** (REST e RabbitMQ) serão implementadas e testadas.
 
----
-
 ### **📌 Tarefas Detalhadas**
 #### **1️ Criar estrutura do projeto e repositórios**  
 📌 **Descrição:**  
@@ -430,7 +428,6 @@ Os testes devem garantir que, **caso o relatório completo falhe**, o rollback d
 
 📌 **Objetivo da Sprint 3:**  
 Nesta sprint, o foco será **garantir a resiliência e robustez do sistema**, implementando **mecanismos de retry e rollback**, além de **testes avançados** para validar sua estabilidade e performance. Também serão incluídos **documentação, arquitetura e suporte a Docker** para facilitar a integração e o deploy.
-
 
 ### **📌 Tarefas Detalhadas**
 
