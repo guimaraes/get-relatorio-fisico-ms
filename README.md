@@ -1,192 +1,120 @@
-# Geração de Relatórios para Pessoa Física
+# ÉPICO: Geração de Relatórios para Pessoa Física
 
-## Visão Geral
-O objetivo deste épico é desenvolver um ecossistema que permita a geração de relatórios para pessoa física a partir de um endpoint. O sistema irá classificar o tipo de relatório (Básico ou Completo), calcular o valor a ser cobrado e consolidar os dados para entrega ao usuário final. Também será implementado um mecanismo de rollback e fallback caso haja falhas na geração do relatório completo.
+## Descrição:
+Desenvolver um ecossistema composto por quatro aplicativos para permitir que um cliente solicite a geração de relatórios de pessoa física, com opção de relatório básico ou completo, realizando a cobrança e gerenciando processos assíncronos de forma resiliente. A arquitetura deve ser baseada em **Java 17+**, **Spring Boot 3.4.2**, e deve garantir robustez utilizando mensageria com **RabbitMQ** e reprocessamento automático em caso de falha.
 
-## Requisitos do Negócio
-- O cliente pode solicitar um **Relatório Básico** (R$ 5,00) ou um **Relatório Completo** (R$ 10,00);
-- O Relatório Básico retorna: Nome, Sexo e Nacionalidade;
-- O Relatório Completo retorna tudo do Básico + Endereço, Telefone e Documentos (RG e CPF);
-- Se a soma dos dígitos do CPF for igual a **44**, a geração do relatório será negada.
+## Objetivo:
+- Criar um sistema distribuído e escalável para geração de relatórios.
+- Garantir resiliência e confiabilidade na geração do relatório completo.
+- Implementar fluxo de rollback caso a geração do relatório completo falhe.
+- Garantir segurança e rastreabilidade das requisições.
+- Implementar testes automatizados para validar o comportamento do sistema.
 
-## Requisitos Técnicos
-- Desenvolvimento de **4 aplicativos** em **Java 17+** utilizando **Spring Boot 3.4.2**;
-- **App 1 (Entrada):**
-  - Deve utilizar obrigatoriamente banco de dados relacional;
-  - O valor a cobrar deve ser gravado no banco antes da geração do relatório;
-  - A resposta da API deve incluir o valor cobrado;
-  - Implementa a lógica de fallback para cobrar o básico caso o completo falhe;
-  - Retorna a resposta final ao cliente.
-- **App 2 (Relatório Básico):**
-  - Expondo endpoint REST para fornecer dados públicos do relatório básico;
-- **App 3 (Relatório Completo):**
-  - Expondo endpoint REST para fornecer os dados complementares do relatório completo;
-- **App 4 (Financeiro):**
-  - Deve utilizar **RabbitMQ** via **Spring Cloud Stream** para comunicação assíncrona;
-- Execução do **App 2 e App 3 de forma assíncrona** ao solicitar relatório completo;
-- Repetir a tentativa de requisição ao App 3 **duas vezes com delay de 300ms** antes de acionar o fallback;
-- Rollback do valor cobrado caso o relatório completo falhe;
-- **Testes unitários** utilizando **JUnit 5 e Mockito**;
-- Opcional: **Docker, Docker Compose, Swagger, Desenho de Arquitetura**.
+## Aplicativos:
+1. **Entrada**: Responsável por receber requisições, validar dados, persistir a cobrança e consolidar o resultado.
+2. **Relatório Básico**: Responsável por gerar informações básicas da pessoa física.
+3. **Relatório Completo**: Responsável por gerar informações adicionais (endereço, telefone, documentos).
+4. **Financeiro**: Responsável por processar a cobrança, executar rollback em caso de erro e realizar integração assíncrona via RabbitMQ.
 
 ---
 
-## Backlog de Atividades (Scrum)
+# HISTÓRIAS DE USUÁRIO
 
-### Histórias de Usuário
-#### **US-001 - Como cliente, desejo solicitar um relatório básico**
-**Critérios de aceitação:**
-- O endpoint deve permitir a escolha do relatório básico;
-- O sistema deve validar o CPF do usuário;
-- O preço de R$ 5,00 deve ser armazenado no banco de dados;
-- O endpoint deve retornar Nome, Sexo e Nacionalidade;
+## US001 - Solicitar Relatório
+**Como** um cliente da aplicação, **eu quero** solicitar um relatório básico ou completo **para que** eu obtenha informações sobre uma pessoa física.
 
-#### **US-002 - Como cliente, desejo solicitar um relatório completo**
-**Critérios de aceitação:**
-- O endpoint deve permitir a escolha do relatório completo;
-- O sistema deve validar o CPF do usuário;
-- O preço de R$ 10,00 deve ser armazenado no banco de dados;
-- Os Apps 2 e 3 devem ser chamados de forma assíncrona;
-- O resultado deve ser consolidado e retornado ao cliente;
-- Em caso de falha do App 3, deve-se tentar duas novas requisições com intervalo de 300ms;
-- Se falhar definitivamente, o sistema deve reverter a cobrança e processar apenas o básico.
+### Tarefas:
+- Criar o endpoint de solicitação de relatório.
+- Implementar a persistência da cobrança antes da geração do relatório.
+- Implementar validação do CPF para verificação de restrição.
+- Criar a lógica para definir se o relatório solicitado é básico ou completo.
 
-#### **US-003 - Como cliente, desejo ser informado caso meu CPF esteja restrito**
-**Critérios de aceitação:**
-- O sistema deve somar os dígitos do CPF;
-- Se a soma for 44, deve bloquear a geração do relatório;
-- O cliente deve ser informado da impossibilidade de emissão do relatório.
+### Subtarefas:
+- Criar classe de request para o endpoint.
+- Criar service para processar a solicitação.
+- Implementar persistência com JPA.
+- Implementar retorno JSON padronizado.
+- Implementar logging e auditoria da requisição.
 
 ---
 
-## BDD - Comportamento do Sistema
+## US002 - Geração do Relatório Completo
 
-### **Cenário 1: Geração de Relatório Básico**
-```
-Dado que um cliente solicita um relatório básico
-Quando a API recebe o pedido e valida os dados
-Então o sistema armazena o valor R$ 5,00 no banco de dados
-E retorna Nome, Sexo e Nacionalidade ao cliente.
-```
+### Tarefas:
+- Implementar chamadas assíncronas para os microsserviços de relatório.
+- Consolidar os resultados do relatório básico e completo.
+- Implementar tentativa de reprocessamento em caso de falha.
+- Implementar rollback da cobrança caso a geração falhe.
 
-### **Cenário 2: Geração de Relatório Completo**
-```
-Dado que um cliente solicita um relatório completo
-Quando a API recebe o pedido e valida os dados
-Então o sistema armazena o valor R$ 10,00 no banco de dados
-E chama os Apps 2 e 3 de forma assíncrona
-E consolida os resultados antes de retornar ao cliente.
-```
-
-### **Cenário 3: Rollback em Falha**
-```
-Dado que um cliente solicita um relatório completo
-E o App 3 falha na resposta
-Quando o sistema tenta duas novas requisições com 300ms de intervalo
-E ambas falham
-Então o sistema reverte a cobrança e processa apenas o básico.
-```
-
-### **Cenário 4: CPF Restrito**
-```
-Dado que um cliente solicita um relatório
-Quando a soma dos dígitos do CPF for 44
-Então o sistema bloqueia a emissão do relatório
-E informa o cliente sobre a restrição.
-```
+### Subtarefas:
+- Criar feign client para chamadas assíncronas.
+- Criar método de tentativa com intervalo de 300ms.
+- Criar mecanismo de fallback para uso do relatório básico.
+- Implementar testes unitários e de integração.
 
 ---
 
-## Definition of Done (DoD)
-- Todo código deve estar versionado no repositório oficial;
-- Todas as histórias de usuário devem possuir testes unitários;
-- As falhas devem ser tratadas corretamente (rollback, fallback e exceções);
-- A documentação deve estar atualizada no Swagger;
-- Nenhuma história pode ser marcada como "Concluída" sem revisão de código.
+## US003 - Geração de Relatórios via Mensageria
+
+### Tarefas:
+- Implementar mensageria com RabbitMQ para processar cobrança.
+- Implementar reprocessamento em caso de falha no financeiro.
+- Criar logs e auditoria para rastreabilidade.
+
+### Subtarefas:
+- Configurar RabbitMQ no projeto.
+- Criar classes de mensagem e consumidor RabbitMQ.
+- Implementar testes para garantir a confiabilidade da comunicação.
+- Criar dashboard para monitoramento de eventos RabbitMQ.
 
 ---
 
-## **1. Preparação do Ambiente e Ferramentas (1-2 dias)**
-- [ ] Criar o repositório Git para versionamento do código.
-- [ ] Configurar o ambiente de desenvolvimento:
-  - **Java 17** (ou superior)
-  - **Spring Boot 3.4.2**
-  - **Maven ou Gradle**
-  - **Banco de Dados Relacional** (MySQL, PostgreSQL ou H2 para desenvolvimento)
-  - **Ferramentas de comunicação assíncrona** (RabbitMQ)
-- [ ] Definir a stack de ferramentas de suporte:
-  - **Docker e Docker Compose** (para padronização do ambiente)
-  - **Swagger/OpenAPI** para documentação da API.
-  - **Lombok e MapStruct** para facilitar a codificação.
+# BDD (Behavior-Driven Development)
+
+## Cenário 1: Solicitação de Relatório Básico
+**Dado** que um cliente solicita um relatório básico
+**Quando** a requisição é recebida pelo sistema
+**Então** o sistema deve cobrar R$5,00
+**E** deve retornar um JSON contendo Nome, Sexo e Nacionalidade
+
+## Cenário 2: Solicitação de Relatório Completo
+**Dado** que um cliente solicita um relatório completo
+**Quando** a requisição é processada
+**Então** o sistema deve chamar os microsserviços de Relatório Básico e Completo de forma assíncrona
+**E** deve consolidar os dados retornados
+**E** deve cobrar R$10,00 do cliente
+
+## Cenário 3: Restrinção de CPF
+**Dado** que um cliente solicita um relatório com CPF cujo somatório seja 44
+**Quando** o sistema processa a solicitação
+**Então** deve retornar erro "Relatório Restrito" sem cobrar o cliente
+
+## Cenário 4: Falha no Relatório Completo
+**Dado** que um cliente solicita um relatório completo
+**Quando** o microsserviço de Relatório Completo falha
+**Então** o sistema deve tentar novamente por até duas vezes com intervalo de 300ms
+**E** se continuar falhando, deve reverter a cobrança e cobrar apenas pelo relatório básico
 
 ---
 
-## **2. Definição da Arquitetura do Sistema (2-3 dias)**
-- [ ] **Diagrama da Arquitetura:** Criar um desenho de alto nível, detalhando como os 4 aplicativos interagem entre si.
-- [ ] **Modelo de Dados:**
-  - Definir o esquema do banco de dados para armazenar as cobranças e logs das requisições.
-- [ ] **Definir o Protocolo de Comunicação:**
-  - REST para comunicação entre os serviços.
-  - Mensageria com **RabbitMQ** para processar eventos financeiros.
-- [ ] **Definir o Fluxo de Requisição:**
-  - Como o App 1 gerencia as chamadas assíncronas para os Apps 2 e 3.
-  - Como o App 4 trata as transações financeiras e o rollback.
-- [ ] **Definir padrões de logs e monitoramento:**
-  - Utilização de **Spring Boot Actuator** e logs estruturados para depuração.
+# Definition of Done (DoD)
+- Todas as histórias de usuário implementadas e testadas.
+- Testes unitários cobrindo pelo menos 90% do código.
+- Pipeline CI/CD configurado e validado.
+- Documentação da API gerada via Swagger.
+- Logs estruturados implementados.
+- Docker e Docker Compose configurados (Opcional).
+- Todos os códigos revisados e aprovados no code review.
 
 ---
 
-## **3. Implementação Inicial da Infraestrutura (2-4 dias)**
-- [ ] Criar a estrutura base do projeto com pacotes organizados:
-  - `com.projeto.app1.entrada`
-  - `com.projeto.app2.relatoriobasico`
-  - `com.projeto.app3.relatoriocompleto`
-  - `com.projeto.app4.financeiro`
-- [ ] Implementar configurações básicas do **Spring Boot**:
-  - Configurar **Spring Security** (se necessário).
-  - Configurar **Spring Data JPA** e conexão com o banco de dados.
-  - Configurar **RabbitMQ** no **App 4** para processar mensagens financeiras.
-- [ ] Criar os **endpoints iniciais** para cada aplicação, retornando respostas mockadas.
+# Definition of Done (DoD)
+- Todas as histórias de usuário implementadas e testadas.
+- Testes unitários cobrindo pelo menos 90% do código.
+- Pipeline CI/CD configurado e validado.
+- Documentação da API gerada via Swagger.
+- Logs estruturados implementados.
+- Docker e Docker Compose configurados (Opcional).
+- Todos os códigos revisados e aprovados no code review.
 
 ---
-
-## **4. Desenvolvimento das Funcionalidades (1-2 semanas)**
-### **App 1 - Entrada**
-- [ ] Criar a API REST para receber solicitações de relatórios.
-- [ ] Implementar a validação do CPF e do tipo de relatório.
-- [ ] Armazenar o valor no banco de dados antes da solicitação.
-- [ ] Implementar chamadas assíncronas para os Apps 2 e 3.
-- [ ] Implementar lógica de rollback em caso de falha.
-
-### **App 2 - Relatório Básico**
-- [ ] Criar API REST para fornecer informações básicas (Nome, Sexo, Nacionalidade).
-- [ ] Implementar persistência no banco de dados.
-
-### **App 3 - Relatório Completo**
-- [ ] Criar API REST para fornecer dados adicionais (Endereço, Telefone, Documentos).
-- [ ] Implementar integração com o App 2.
-- [ ] Implementar lógica para realizar duas tentativas em caso de falha.
-
-### **App 4 - Financeiro**
-- [ ] Criar sistema de mensageria via **RabbitMQ**.
-- [ ] Implementar fila para processar transações financeiras.
-- [ ] Criar lógica de compensação para rollback de cobrança.
-
----
-
-## **5. Testes e Validação (1 semana)**
-- [ ] Implementar **testes unitários** usando **JUnit 5** e **Mockito**.
-- [ ] Implementar **testes de integração** para validar a comunicação entre os serviços.
-- [ ] Criar testes de carga para verificar a escalabilidade das APIs.
-
----
-
-## **6. Deploy e Documentação (2-3 dias)**
-- [ ] Criar **Dockerfile** para cada aplicação.
-- [ ] Configurar **Docker Compose** para facilitar a orquestração.
-- [ ] Gerar a documentação com **Swagger/OpenAPI**.
-- [ ] Criar um **README.md** explicando como rodar o projeto.
-
----
-
-
