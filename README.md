@@ -62,9 +62,28 @@ Dada a necessidade de cobrança pelos relatórios, é essencial que o sistema ma
 7. Implementação opcional de **Docker e Docker Compose** para deploy local.
 8. Utilização opcional de **Swagger** para documentação.
 9. Desenho da arquitetura do ecossistema.
-
 ---
+#### **Fluxo de Comunicação entre os Serviços**
+1. **Usuário → APP1 (Entrada - API Gateway e Orquestrador)**
+   - O usuário faz uma requisição REST (`POST /api/v1/reports`) informando CPF e tipo de relatório (básico ou completo).
+   - O APP1 valida o CPF. Se a soma dos dígitos for **44**, retorna um erro e finaliza a requisição.
+   - O APP1 registra a cobrança no banco de dados e envia uma mensagem ao **RabbitMQ** para processar a cobrança no APP4 (Financeiro).
 
+2. **APP1 → APP2 e APP3 (Serviços de Relatórios)**
+   - Se o usuário solicitou um **relatório básico**, o **APP1** faz uma **requisição REST síncrona** para o **APP2** (`GET /api/v1/basic-report/{cpf}`).
+   - Se o usuário solicitou um **relatório completo**, o **APP1** faz **requisições REST assíncronas** para o **APP2 e APP3** (`GET /api/v1/full-report/{cpf}`).
+   - Se o **APP3 falhar**, o **APP1** reenvia a requisição **duas vezes com um intervalo de 300ms**.
+
+3. **APP3 (Relatório Completo) → APP1**
+   - O **APP3** processa a requisição de forma **assíncrona**.
+   - Após obter os dados detalhados (Endereço, Telefone, Documentos), retorna uma resposta **JSON via REST** para o **APP1**.
+   - O **APP1** consolida os dados do **APP2 e APP3** e retorna um JSON único ao usuário.
+
+4. **APP1 (Entrada) → APP4 (Financeiro) via RabbitMQ**
+   - O **APP1** envia uma mensagem para o **RabbitMQ** com os detalhes da cobrança.
+   - O **APP4 (Financeiro)** escuta essa mensagem e processa a cobrança.
+   - Se o **APP3 falhar**, o **APP1** publica um **evento de rollback no RabbitMQ**, e o **APP4** ajusta a cobrança para o relatório básico.
+---
 ### **Histórias de Usuário**
 Histórias de usuário organizadas por cada um dos quatro aplicativos.
 
