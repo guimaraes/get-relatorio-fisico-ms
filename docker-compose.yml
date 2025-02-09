@@ -1,0 +1,47 @@
+version: '3.9'
+
+networks:
+  report-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+
+services:
+  postgres:
+    image: postgres:12
+    container_name: report-db
+    restart: always
+    networks:
+      report-network:
+        ipv4_address: 192.168.100.10
+    environment:
+      POSTGRES_DB: report_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: passw@rd
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  report-gateway:
+    build:
+      context: ./report-gateway-service
+      dockerfile: Dockerfile
+    container_name: report-gateway-service
+    restart: always
+    networks:
+      report-network:
+        ipv4_address: 192.168.100.20
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://192.168.100.10:5432/report_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: passw@rd
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
