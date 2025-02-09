@@ -106,10 +106,6 @@ E informa o cliente sobre a restrição.
 
 ---
 
-Para iniciar o desenvolvimento do projeto de **Geração de Relatórios para Pessoa Física**, os próximos passos seguem uma abordagem estruturada de arquitetura e implementação:
-
----
-
 ## **1. Preparação do Ambiente e Ferramentas (1-2 dias)**
 - [ ] Criar o repositório Git para versionamento do código.
 - [ ] Configurar o ambiente de desenvolvimento:
@@ -193,8 +189,4 @@ Para iniciar o desenvolvimento do projeto de **Geração de Relatórios para Pes
 
 ---
 
-## **Conclusão**
-Esses passos garantem que o desenvolvimento siga uma abordagem bem estruturada e eficiente, minimizando riscos e facilitando a manutenção do sistema. 🚀  
-
-Caso precise de ajustes ou priorização em alguma área, me avise!
 
