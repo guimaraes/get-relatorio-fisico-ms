@@ -14,21 +14,43 @@ Dada a necessidade de cobrança pelos relatórios, é essencial que o sistema ma
 
 ---
 
-### **Requisitos**
+### **Requisitos Funcionais**
 
-#### **Funcionais**
-1. O sistema deve permitir que o usuário solicite um relatório informando CPF e tipo (básico ou completo).
-2. O relatório básico deve conter Nome, Sexo e Nacionalidade.
-3. O relatório completo deve conter todas as informações do básico, além de Endereço, Telefone e Documentos (RG e CPF).
-4. O sistema deve validar o CPF e, caso a soma dos números seja **igual a 44**, o relatório não poderá ser exibido.
-5. O sistema deve cobrar **R$5,00** pelo relatório básico e **R$10,00** pelo relatório completo.
-6. O valor da cobrança deve ser salvo no banco de dados antes da geração do relatório.
-7. O relatório completo deve ser gerado de forma assíncrona, consolidando as informações dos microsserviços responsáveis por Relatório Básico e Relatório Completo.
-8. Caso um dos microsserviços de relatório falhe, o sistema deve tentar novamente **duas vezes** com um intervalo de **300ms** entre as tentativas.
-9. Caso a geração do relatório completo falhe mesmo após as tentativas, o sistema deve realizar rollback da cobrança do relatório completo e cobrar apenas o valor do relatório básico.
-10. O serviço financeiro deve processar a cobrança de forma assíncrona utilizando RabbitMQ e Spring Cloud Stream.
-11. O sistema deve responder todas as requisições no formato JSON via REST.
-12. A aplicação deve ser documentada via Swagger.
+1️ **Solicitação de Relatório:** O sistema deve permitir que o usuário solicite a geração de um relatório informando **CPF** e **tipo de relatório** (**básico** ou **completo**).
+
+2️ **Relatório Básico:** O relatório básico deve conter as seguintes informações públicas:
+   - Nome  
+   - Sexo  
+   - Nacionalidade  
+
+3️ **Relatório Completo:** O relatório completo deve conter todas as informações do relatório básico, além de:
+   - Endereço  
+   - Telefone  
+   - Documentos (RG e CPF)  
+
+4️ **Restrição de Relatório por CPF:** O sistema deve validar o CPF e, **caso a soma dos números seja igual a 44**, o relatório **não poderá ser exibido** e deve retornar uma mensagem informando que o acesso é negado.
+
+5️ **Cobrança do Relatório:** O sistema deve cobrar **R$5,00** pelo relatório básico e **R$10,00** pelo relatório completo. 
+
+6️ **Registro da Cobrança no Banco de Dados:** O valor da cobrança deve ser **salvo no banco de dados antes da geração do relatório** e **incluído na resposta da API**.
+
+7 **Geração Assíncrona do Relatório Completo:** O relatório completo deve ser gerado **de forma assíncrona**, acionando os serviços responsáveis por **Relatório Básico e Relatório Completo** para consolidar os dados.
+
+8 **Consolidação do Relatório Completo:** O sistema deve consolidar as informações recebidas dos microsserviços e **retornar um JSON único** ao usuário.
+
+9 **Mecanismo de Reexecução em Caso de Falha:** Caso um dos microsserviços de relatório falhe, o sistema deve realizar **duas novas tentativas**, com um intervalo de **300ms** entre elas.
+
+10 **Rollback da Cobrança em Caso de Falha:** Caso a geração do relatório completo falhe **mesmo após as tentativas**, o sistema deve:
+   - **Realizar rollback da cobrança** do relatório completo no serviço financeiro.  
+   - **Cobrar apenas o valor do relatório básico** e retornar os dados disponíveis.
+
+11 **Cobrança Assíncrona:** O serviço financeiro deve processar as cobranças **de forma assíncrona**, utilizando **RabbitMQ e Spring Cloud Stream**.
+
+12 **Padrão de Comunicação REST e JSON:** O sistema deve **expor endpoints REST** e **responder todas as requisições no formato JSON**.
+
+13 **Documentação Opcional via Swagger:** A aplicação **pode ser documentada via Swagger** para facilitar a integração com outras aplicações e consumidores da API.
+
+---
 
 #### **Não Funcionais**
 1. As aplicações devem ser desenvolvidas em **Java 17+** utilizando **Spring Boot 3.4.2**.
