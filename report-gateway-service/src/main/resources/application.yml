@@ -1,0 +1,46 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: report-gateway-service
+  datasource:
+    url: jdbc:postgresql://host.docker.internal:5432/report_db
+#    url: jdbc:postgresql://localhost:5432/report_db
+    username: postgres
+    password: passw@rd
+    driver-class-name: org.postgresql.Driver
+    validate-on-migrate: false
+    baseline-on-migrate: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    locations: classpath:db/migration
+    enabled: true
+    clean-disabled: false
+    baseline-on-migrate: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    show-details: always
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    com.projeto: DEBUG
+    org.flywaydb: TRACE
