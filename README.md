@@ -107,14 +107,3 @@ Desenvolver um ecossistema composto por quatro aplicativos para permitir que um 
 - Todos os códigos revisados e aprovados no code review.
 
 ---
-
-# Definition of Done (DoD)
-- Todas as histórias de usuário implementadas e testadas.
-- Testes unitários cobrindo pelo menos 90% do código.
-- Pipeline CI/CD configurado e validado.
-- Documentação da API gerada via Swagger.
-- Logs estruturados implementados.
-- Docker e Docker Compose configurados (Opcional).
-- Todos os códigos revisados e aprovados no code review.
-
----
