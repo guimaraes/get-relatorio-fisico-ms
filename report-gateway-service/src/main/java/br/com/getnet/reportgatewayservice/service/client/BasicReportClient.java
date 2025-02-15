@@ -5,9 +5,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "basicReportClient", url = "${services.basic-report-url}")
+@FeignClient(name = "basicReportClient", url = "#{@getBasicReportUrl}")
 public interface BasicReportClient {
-
     @GetMapping("/api/v1/basic-report/{cpf}")
     ReportResponseDTO getBasicReport(@PathVariable("cpf") String cpf);
 }
