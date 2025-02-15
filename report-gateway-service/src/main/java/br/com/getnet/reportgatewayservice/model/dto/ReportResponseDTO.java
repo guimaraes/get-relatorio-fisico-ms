@@ -16,5 +16,4 @@ public class ReportResponseDTO {
     private String address;
     private String phone;
     private String document;
-
 }

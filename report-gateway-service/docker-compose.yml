@@ -6,7 +6,7 @@ networks:
 
 services:
   postgres:
-    image: postgres:12
+    image: postgres:16
     container_name: report-db
     restart: always
     networks:
@@ -19,11 +19,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -35,13 +30,8 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5672:5672"   # Porta do RabbitMQ para conexão
-      - "15672:15672" # Porta do painel de administração
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "5672:5672"
+      - "15672:15672"
 
   report-gateway:
     build: .
@@ -50,16 +40,12 @@ services:
     networks:
       - report-network
     depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - postgres
+      - rabbitmq
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/report_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: passw@rd
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
       SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
