@@ -3,9 +3,6 @@ version: '3.9'
 networks:
   report-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.100.0/24
 
 services:
   postgres:
@@ -13,8 +10,7 @@ services:
     container_name: report-db
     restart: always
     networks:
-      report-network:
-        ipv4_address: 192.168.100.10
+      - report-network
     environment:
       POSTGRES_DB: report_db
       POSTGRES_USER: postgres
@@ -23,20 +19,47 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: report-rabbitmq
+    restart: always
+    networks:
+      - report-network
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"   # Porta do RabbitMQ para conexão
+      - "15672:15672" # Porta do painel de administração
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   report-gateway:
     build: .
     container_name: report-gateway-service
     restart: always
     networks:
-      report-network:
-        ipv4_address: 192.168.100.20
+      - report-network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://192.168.100.10:5432/report_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/report_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: passw@rd
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
       SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"

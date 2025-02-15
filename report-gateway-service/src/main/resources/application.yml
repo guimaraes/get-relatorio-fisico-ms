@@ -6,26 +6,41 @@ server:
 spring:
   application:
     name: report-gateway-service
+
+  services:
+    basic-report-url: basic-report-service
+    full-report-url: full-report-service
+
   datasource:
-    url: jdbc:postgresql://host.docker.internal:5432/report_db
-#    url: jdbc:postgresql://localhost:5432/report_db
+    url: jdbc:postgresql://postgres:5432/report_db
     username: postgres
     password: passw@rd
     driver-class-name: org.postgresql.Driver
-    validate-on-migrate: false
-    baseline-on-migrate: true
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-  flyway:
-    locations: classpath:db/migration
-    enabled: true
-    clean-disabled: false
-    baseline-on-migrate: true
+        jdbc:
+          batch_size: 25
+          order_updates: true
+          order_inserts: true
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
 
 management:
   endpoints:
@@ -42,5 +57,15 @@ logging:
   level:
     root: INFO
     org.springframework.web: DEBUG
-    com.projeto: DEBUG
-    org.flywaydb: TRACE
+    br.com.getnet: DEBUG
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - name: Report Gateway API
+        url: /v3/api-docs
