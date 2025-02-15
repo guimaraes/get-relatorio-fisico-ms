@@ -10,4 +10,4 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=prod \
     JAVA_OPTS="-XX:+UseContainerSupport -Xms512m -Xmx1024m"
 COPY --from=builder /app/target/report-gateway-service-0.0.1-SNAPSHOT.jar app.jar
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "sleep 10 && java $JAVA_OPTS -jar app.jar"]
