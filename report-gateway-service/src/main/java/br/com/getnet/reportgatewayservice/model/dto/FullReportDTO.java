@@ -4,11 +4,11 @@ import lombok.Data;
 
 @Data
 public class FullReportDTO {
-    private String nome;
-    private String sexo;
-    private String nacionalidade;
-    private String endereco;
-    private String telefone;
+    private String name;
+    private String gender;
+    private String nationality;
+    private String address;
+    private String phoneNumber;
     private String rg;
     private String cpf;
 }

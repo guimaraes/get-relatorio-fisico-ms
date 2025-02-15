@@ -11,3 +11,4 @@ public class ReportGatewayServiceApplication {
 		SpringApplication.run(ReportGatewayServiceApplication.class, args);
 	}
 }
+

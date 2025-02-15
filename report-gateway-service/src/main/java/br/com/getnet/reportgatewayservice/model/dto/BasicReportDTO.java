@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class BasicReportDTO {
-    private String nome;
-    private String sexo;
-    private String nacionalidade;
+    private String name;
+    private String gender;
+    private String nationality;
 }
