@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -40,6 +41,9 @@ public class ReportRequestService {
         reportRequest.setCpf(requestDTO.getCpf());
         reportRequest.setType(requestDTO.isFullReport() ? ReportType.COMPLETE : ReportType.BASIC);
         reportRequest.setStatus(ReportStatus.PENDING);
+        reportRequest.setAmount(cost);
+        reportRequest.setCreatedAt(LocalDateTime.now());
+
         reportRequestRepository.save(reportRequest);
 
         if (requestDTO.isFullReport()) {
@@ -48,6 +52,7 @@ public class ReportRequestService {
             return fetchBasicReport(requestDTO.getCpf(), reportRequest);
         }
     }
+
 
     private ReportResponseDTO fetchBasicReport(String cpf, ReportRequest reportRequest) {
         try {
