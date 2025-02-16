@@ -18,7 +18,7 @@ public class ReportRequestDTO {
     private String cpf;
 
     @NotNull
-    private ReportType type;  // ✅ Alterado de String para ReportType
+    private ReportType type;
 
     @NotNull
     private BigDecimal amount;

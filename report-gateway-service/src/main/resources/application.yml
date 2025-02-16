@@ -7,12 +7,8 @@ spring:
   application:
     name: report-gateway-service
 
-  services:
-    basic-report-url: basic-report-service
-    full-report-url: full-report-service
-
   datasource:
-    url: jdbc:postgresql://postgres:5432/report_db
+    url: jdbc:postgresql://localhost:5432/report_db
     username: postgres
     password: passw@rd
     driver-class-name: org.postgresql.Driver
@@ -24,23 +20,49 @@ spring:
       connection-timeout: 30000
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        jdbc:
-          batch_size: 25
-          order_updates: true
-          order_inserts: true
 
   rabbitmq:
     host: rabbitmq
     port: 5672
     username: guest
     password: guest
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: full
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      basic-report-service:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+        sliding-window-size: 10
+      full-report-service:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+        sliding-window-size: 10
+
+  retry:
+    instances:
+      basic-report-service:
+        max-attempts: 3
+        wait-duration: 300ms
+      full-report-service:
+        max-attempts: 3
+        wait-duration: 300ms
 
 management:
   endpoints:
@@ -58,14 +80,17 @@ logging:
     root: INFO
     org.springframework.web: DEBUG
     br.com.getnet: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+
+services:
+  basic-report-url: http://basic-report-service:8081
+  full-report-url: http://full-report-service:8082
+
 springdoc:
   api-docs:
     enabled: true
-    path: /v3/api-docs
   swagger-ui:
-    enabled: true
     path: /swagger-ui.html
-    config-url: /v3/api-docs/swagger-config
-    urls:
-      - name: Report Gateway API
-        url: /v3/api-docs
+    operations-sorter: alpha
+  paths-to-match: "/api/**"
+  show-actuator: true
