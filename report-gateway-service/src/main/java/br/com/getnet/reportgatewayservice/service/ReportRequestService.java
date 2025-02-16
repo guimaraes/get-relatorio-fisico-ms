@@ -70,8 +70,11 @@ public class ReportRequestService {
         }
     }
 
-    @Retry(name = "full-report-retry")
+    @Retry(name = "full-report-retry", fallbackMethod = "handleFullReportFailure")
     public ReportResponseDTO fetchFullReport(String cpf, ReportRequest reportRequest) {
+        CompletableFuture<ReportResponseDTO> basicReportFuture = CompletableFuture.supplyAsync(() -> basicReportClient.getBasicReport(cpf));
+        CompletableFuture<ReportResponseDTO> fullReportFuture = CompletableFuture.supplyAsync(() -> fullReportClient.getFullReport(cpf));
+
         return CompletableFuture.allOf(basicReportFuture, fullReportFuture)
                 .thenApply(voidRes -> consolidateReports(basicReportFuture, fullReportFuture, reportRequest))
                 .exceptionally(ex -> {
@@ -94,10 +97,11 @@ public class ReportRequestService {
 
             return full;
         } catch (Exception e) {
-            handleFailure(reportRequest);
-            throw new ReportProcessingException("Error consolidating report data.", e);
+            paymentService.rollbackPayment(reportRequest.getCpf());
+            return basicFuture.join();
         }
     }
+
 
 
     private void handleFailure(ReportRequest reportRequest) {

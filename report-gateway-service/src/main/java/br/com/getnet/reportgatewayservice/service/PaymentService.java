@@ -35,6 +35,16 @@ public class PaymentService {
 
         transaction.setStatus(PaymentStatus.REFUNDED);
         paymentTransactionRepository.save(transaction);
+
+        PaymentTransaction newTransaction = PaymentTransaction.builder()
+                .cpf(cpf)
+                .amount(BigDecimal.valueOf(5.00))
+                .status(PaymentStatus.SUCCESS)
+                .build();
+
+        paymentTransactionRepository.save(newTransaction);
+
         rabbitTemplate.convertAndSend("refundQueue", transaction);
     }
+
 }
