@@ -1,0 +1,71 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: basic-report-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/basic_report_db
+    username: postgres
+    password: passw@rd
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: full
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    show-details: always
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    br.com.getnet: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+
+services:
+  report-gateway-url: http://report-gateway-service:8080
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+  paths-to-match: "/api/**"
+  show-actuator: true
