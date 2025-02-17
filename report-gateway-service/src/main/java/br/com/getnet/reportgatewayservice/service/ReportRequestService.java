@@ -11,6 +11,7 @@ import br.com.getnet.reportgatewayservice.repository.ReportRequestRepository;
 import br.com.getnet.reportgatewayservice.service.client.BasicReportClient;
 import br.com.getnet.reportgatewayservice.service.client.FullReportClient;
 import br.com.getnet.reportgatewayservice.util.CpfValidator;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,11 +47,17 @@ public class ReportRequestService {
 
         reportRequestRepository.save(reportRequest);
 
-        if (requestDTO.isFullReport()) {
-            return fetchFullReport(requestDTO.getCpf(), reportRequest);
-        } else {
-            return fetchBasicReport(requestDTO.getCpf(), reportRequest);
+        try {
+            if (requestDTO.isFullReport()) {
+                return fetchFullReport(requestDTO.getCpf(), reportRequest);
+            } else {
+                return fetchBasicReport(requestDTO.getCpf(), reportRequest);
+            }
+        } catch (Exception e) {
+            handleFailure(reportRequest);
+            throw new ReportProcessingException("Erro ao gerar relatório", e);
         }
+
     }
 
 
@@ -63,7 +70,8 @@ public class ReportRequestService {
         }
     }
 
-    private ReportResponseDTO fetchFullReport(String cpf, ReportRequest reportRequest) {
+    @Retry(name = "full-report-retry", fallbackMethod = "handleFullReportFailure")
+    public ReportResponseDTO fetchFullReport(String cpf, ReportRequest reportRequest) {
         CompletableFuture<ReportResponseDTO> basicReportFuture = CompletableFuture.supplyAsync(() -> basicReportClient.getBasicReport(cpf));
         CompletableFuture<ReportResponseDTO> fullReportFuture = CompletableFuture.supplyAsync(() -> fullReportClient.getFullReport(cpf));
 
@@ -71,7 +79,7 @@ public class ReportRequestService {
                 .thenApply(voidRes -> consolidateReports(basicReportFuture, fullReportFuture, reportRequest))
                 .exceptionally(ex -> {
                     handleFailure(reportRequest);
-                    throw new ReportProcessingException("Failed to generate the full report.");
+                    throw new ReportProcessingException("Falha ao gerar o relatório completo", ex);
                 })
                 .join();
     }
@@ -89,10 +97,11 @@ public class ReportRequestService {
 
             return full;
         } catch (Exception e) {
-            handleFailure(reportRequest);
-            throw new ReportProcessingException("Error consolidating report data.", e);
+            paymentService.rollbackPayment(reportRequest.getCpf());
+            return basicFuture.join();
         }
     }
+
 
 
     private void handleFailure(ReportRequest reportRequest) {

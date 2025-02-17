@@ -1,17 +1,17 @@
 server:
-  port: 8080
+  port: 8082
   servlet:
     context-path: /api
 
 spring:
   application:
-    name: report-gateway-service
+    name: full-report-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/report_db
-    username: postgres
-    password: passw@rd
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://localhost:3306/full_report_db?createDatabaseIfNotExist=true&useSSL=false
+    username: root
+    password: Xse1,lo0
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -20,19 +20,19 @@ spring:
       connection-timeout: 30000
 
   jpa:
+    database: mysql
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
 
-  rabbitmq:
-#    host: rabbitmq
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
 
 feign:
   client:
@@ -43,33 +43,24 @@ feign:
         loggerLevel: full
 
 resilience4j:
-  circuitbreaker:
-    instances:
-      basic-report-service:
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
-        permitted-number-of-calls-in-half-open-state: 5
-        sliding-window-size: 10
-      full-report-service:
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
-        permitted-number-of-calls-in-half-open-state: 5
-        sliding-window-size: 10
-
   retry:
     instances:
-      basic-report-service:
-        max-attempts: 3
-        wait-duration: 300ms
       full-report-service:
         max-attempts: 3
         wait-duration: 300ms
+  circuitbreaker:
+    instances:
+      full-report-service:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+        sliding-window-size: 10
 
 management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: "*"
   health:
     show-details: always
   info:
@@ -84,8 +75,8 @@ logging:
     org.springframework.cloud.openfeign: DEBUG
 
 services:
+  report-gateway-url: http://report-gateway-service:8080
   basic-report-url: http://basic-report-service:8081
-  full-report-url: http://full-report-service:8082
 
 springdoc:
   api-docs:
